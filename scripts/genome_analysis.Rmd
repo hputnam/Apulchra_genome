@@ -1,0 +1,28 @@
+---
+title: "Acropora pulchra genome analysis"
+author: "Jill Ashey"
+date: "2024-03-01"
+output: html_document
+---
+
+This file will document genome analysis steps in R for *Acropora pulchra*. Most of the analysis will be done on Andromeda. My working document with Apul genome code is [here](https://github.com/JillAshey/JillAshey_Putnam_Lab_Notebook/blob/master/_posts/2024-02-06-Apulchra-Genome-Assembly.md) and the github for this project is [here](https://github.com/hputnam/Apulchra_genome). 
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(tidyverse)
+```
+
+Read in raw read length information and calculate length information (run this code after converting Hifi read file to fasta)
+```{r}
+
+
+read.table(file = "/Users/benjamin.d.young/Dropbox/NOAA_postdoc/projects/ofav_genome_master/contaminant_screening/rr_read_lengths.txt", 
+           header = F) %>% 
+  dplyr::rename("hifi_read_name" = 1, 
+         "length" = 2) -> hifi_read_length
+nrow(hifi_read_length)
+mean(hifi_read_length$length)
+sum(hifi_read_length$length) #need this for the NCBI submission
+```
+
