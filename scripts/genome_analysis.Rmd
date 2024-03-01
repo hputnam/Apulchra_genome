@@ -13,16 +13,29 @@ knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
 ```
 
-Read in raw read length information and calculate length information (run this code after converting Hifi read file to fasta)
-```{r}
-
-
-read.table(file = "/Users/benjamin.d.young/Dropbox/NOAA_postdoc/projects/ofav_genome_master/contaminant_screening/rr_read_lengths.txt", 
+Read in raw read length information and calculate length information (run this code after converting Hifi read file to fasta). I am keeping the raw read length file on my local computer because it is too large to push to github.
+```{r, echo=F}
+read.table(file = "~/Desktop/PutnamLab/Apulchra_genome/rr_read_lengths.txt", 
            header = F) %>% 
   dplyr::rename("hifi_read_name" = 1, 
          "length" = 2) -> hifi_read_length
-nrow(hifi_read_length)
-mean(hifi_read_length$length)
-sum(hifi_read_length$length) #need this for the NCBI submission
+nrow(hifi_read_length) # 5,898,386 total reads
+mean(hifi_read_length$length) # mean length of reads is 13,424.64
+sum(hifi_read_length$length) #length sum 79,183,709,778. Will need this for the NCBI submission
 ```
+
+Make histogram for read bins from raw hifi data
+```{r, echo = F}
+rr_length_histo <- ggplot(data = hifi_read_length, 
+       aes(x = length, fill = "blue")) +
+  geom_histogram(binwidth = 2000) + 
+  labs(x = "Raw Read Length", y = "Count", title = "Histogram of Raw HiFi Read Lengths") + 
+  scale_fill_manual(values = c("blue")) + 
+  scale_y_continuous(labels = function(x) format(x, scientific = FALSE)); rr_length_histo
+
+ggsave("../output/")
+```
+
+
+
 
