@@ -13,7 +13,7 @@ knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
 ```
 
-Read in raw read length information and calculate length information (run this code after converting Hifi read file to fasta). I am keeping the raw read length file on my local computer because it is too large to push to github.
+Read in raw read length information and calculate length information (run this code after converting Hifi read file to fasta). I am keeping the raw read length file on my local computer because it is too large to push to github; it will be stored on OSF.
 ```{r, echo=F}
 read.table(file = "~/Desktop/PutnamLab/Apulchra_genome/rr_read_lengths.txt", 
            header = F) %>% 
@@ -33,7 +33,7 @@ rr_length_histo <- ggplot(data = hifi_read_length,
   scale_fill_manual(values = c("blue")) + 
   scale_y_continuous(labels = function(x) format(x, scientific = FALSE)); rr_length_histo
 
-ggsave("../output/")
+ggsave("../output/rr_length_histogram.png", rr_length_histo)
 ```
 
 
