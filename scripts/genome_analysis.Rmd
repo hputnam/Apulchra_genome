@@ -36,6 +36,61 @@ rr_length_histo <- ggplot(data = hifi_read_length,
 ggsave("../output/rr_length_histogram.png", rr_length_histo)
 ```
 
+Reading in and viewing eukaryotic contamination read hits 
+```{r reading in and viewing the euk hits that pass the threshold, echo = F}
+read.table(file = "~/Desktop/PutnamLab/Apulchra_genome/contaminants_pass_filter_euks_rr.txt", 
+           header = F) %>% 
+  dplyr::rename("read_ID" = 1, 
+         "subject_ID" = 2, 
+         "percent_identity" = 3, 
+         "align_length" = 4, 
+         "mismatches" = 5, 
+         "gap_open" = 6, 
+         "query_start" = 7, 
+         "query_end" = 8, 
+         "subject_start" = 9, 
+         "subject_end" = 10, 
+         "e_value" = 11, 
+         "bit_Score" = 12) -> contam_euk_pass_filt
+# View(contam_euk_pass_filt) 
+unique(contam_euk_pass_filt$read_ID) # 2 unique reads that pass contaminants? 
+
+contam_euk_pass_filt %>% 
+  summarise(read_ID = unique(read_ID)) -> euk_hit_for_removal
+# View(euk_hit_for_removal)
+
+# View(hifi_read_length)
+print(hifi_read_length %>% 
+        dplyr::filter(hifi_read_name %in% c("m84100_240128_024355_s2/48759857/ccs", "m84100_240128_024355_s2/234751852/ccs")))
+
+ggplot(contam_euk_pass_filt %>% 
+         mutate(subject_ID = as.factor(subject_ID))) + 
+  geom_rect(aes(xmin=as.numeric(subject_ID) - 0.2, 
+                xmax=as.numeric(subject_ID) + 0.2, 
+                ymin=query_start - 0.4, 
+                ymax=query_end + 0.4), 
+            fill="gray60") + 
+  geom_segment(aes(x=query_start, 
+                   y=subject_ID, 
+                   xend=query_end, 
+                   yend=subject_ID), size=2, color="blue") +
+  scale_y_discrete(expand = c(0.2, 0.2), 
+                   guide = guide_axis(n.dodge = 3)) +
+  scale_x_continuous(limits = c(4200, 5900), 
+                     expand = c(0, 0), 
+                     labels = scales::number_format()) + 
+  theme_bw() +
+  theme(text = element_text(size = 5))
+
+contam_euk_pass_filt <- contam_euk_pass_filt %>% 
+  mutate(query_diff = query_end - query_start) %>%
+  mutate(subject_diff = subject_end - subject_start)
+```
+
+Not a pretty plot, but provides good information. It appears the the eukaryotic contamination is only from a short portion of the m84100_240128_024355_s2/48759857/ccs and m84100_240128_024355_s2/234751852/ccs reads. I will likely purge this section prior to assembly. 
+
+
+
 
 
 
