@@ -36,9 +36,9 @@ rr_length_histo <- ggplot(data = hifi_read_length,
 ggsave("../output/rr_length_histogram.png", rr_length_histo)
 ```
 
-Reading in and viewing eukaryotic contamination read hits 
-```{r reading in and viewing the euk hits that pass the threshold, echo = F}
-read.table(file = "~/Desktop/PutnamLab/Apulchra_genome/contaminants_pass_filter_euks_rr.txt", 
+Read in prok and viral hits that pass the threshold 
+```{r}
+read.table(file = "~/Desktop/PutnamLab/Apulchra_genome/contaminant_hits_pv_passfilter_rr.txt", 
            header = F) %>% 
   dplyr::rename("read_ID" = 1, 
          "subject_ID" = 2, 
@@ -51,24 +51,75 @@ read.table(file = "~/Desktop/PutnamLab/Apulchra_genome/contaminants_pass_filter_
          "subject_start" = 9, 
          "subject_end" = 10, 
          "e_value" = 11, 
-         "bit_Score" = 12) -> contam_euk_pass_filt
-# View(contam_euk_pass_filt) 
-unique(contam_euk_pass_filt$read_ID) # 2 unique reads that pass contaminants? 
+          "bit_Score" = 12) %>% 
+   inner_join(hifi_read_length, 
+              by = c("read_ID" = "hifi_read_name")) -> pv_hits
 
-contam_euk_pass_filt %>% 
-  summarise(read_ID = unique(read_ID)) -> euk_hit_for_removal
-# View(euk_hit_for_removal)
+## making the percentage of each hits align length to the contigs
+##so obviously if there is a blast result with 100% it means that whole contig is probably a contaminant
+pv_hits %>% 
+  mutate(percent_alignment = (align_length/length)*100) -> pv_hits
 
-# View(hifi_read_length)
-print(hifi_read_length %>% 
-        dplyr::filter(hifi_read_name %in% c("m84100_240128_024355_s2/48759857/ccs", "m84100_240128_024355_s2/234751852/ccs")))
+pv_hits %>%
+  group_by(read_ID) %>% 
+  summarise(count = n()) -> pv_hit_for_removal
+```
 
-ggplot(contam_euk_pass_filt %>% 
+Make a histogram of percent alignment for the blast results to the contigs 
+```{r}
+ggplot(data = pv_hits, 
+       aes(x = percent_alignment)) +
+  geom_histogram(binwidth = 10) + 
+  labs(x = "% Alignment", y = "Count", title = "Histogram of % alignment for PV contaminants") + 
+  scale_fill_manual(values = c("blue")) + 
+  scale_y_continuous(labels = function(x) format(x, scientific = FALSE))
+```
+
+Most of the percentage alignments are on the lower side and we do not have that many 100% sequences. Remember this is for each blast hit though and is not taking into account coverage over the whole raw read. 
+
+This histogram is showing the alignment of all blast hits along the raw read
+```{r, echo = F}
+ggplot(data = pv_hits %>% 
+  group_by(read_ID) %>% 
+   mutate(start = min(query_start), 
+          stop = max(query_end), 
+          align_length = stop - start, 
+          length = unique(length), 
+          percent_alignment = (align_length/length)*100), 
+       aes(x = percent_alignment)) +
+  geom_histogram(binwidth = 10) + 
+  labs(x = "Raw Read Length", y = "Count", title = "Histogram of Percentage Alignment over the whole raw read") + 
+  scale_fill_manual(values = c("blue")) + 
+  scale_y_continuous(labels = function(x) format(x, scientific = FALSE))
+```
+
+I'm not totally sure what this histogram is telling us...
+
+Look at pv contaminants with <40% covered
+```{r}
+pv_hits %>% 
+  group_by(read_ID) %>% 
+   summarise(start = min(query_start), 
+          stop = max(query_end), 
+          align_length = stop - start, 
+          length = unique(length), 
+          percent_alignment = (align_length/length)*100) %>%
+  arrange(desc(length), percent_alignment) -> summarised_alignments_raw_reads
+#  dplyr::filter(percent_alignment < 50) 
+# View(summarised_alignments_raw_reads)
+
+length(unique(summarised_alignments_raw_reads$read_ID))
+```
+
+There are 222 unique contigs (raw reads) that have some pv contamination. Look at the placement of the contam on a contig 
+```{r}
+ggplot(pv_hits %>% 
+         dplyr::filter(read_ID %in% "m84100_240128_024355_s2/140182293/ccs") %>% 
          mutate(subject_ID = as.factor(subject_ID))) + 
-  geom_rect(aes(xmin=as.numeric(subject_ID) - 0.2, 
-                xmax=as.numeric(subject_ID) + 0.2, 
-                ymin=query_start - 0.4, 
-                ymax=query_end + 0.4), 
+  geom_rect(aes(xmin=query_start, 
+                xmax=query_end, 
+                ymin=as.numeric(subject_ID)-0.4, 
+                ymax=as.numeric(subject_ID)+0.4), 
             fill="gray60") + 
   geom_segment(aes(x=query_start, 
                    y=subject_ID, 
@@ -76,18 +127,71 @@ ggplot(contam_euk_pass_filt %>%
                    yend=subject_ID), size=2, color="blue") +
   scale_y_discrete(expand = c(0.2, 0.2), 
                    guide = guide_axis(n.dodge = 3)) +
-  scale_x_continuous(limits = c(4200, 5900), 
+  scale_x_continuous(limits = c(0, 33399), 
                      expand = c(0, 0), 
                      labels = scales::number_format()) + 
   theme_bw() +
   theme(text = element_text(size = 5))
-
-contam_euk_pass_filt <- contam_euk_pass_filt %>% 
-  mutate(query_diff = query_end - query_start) %>%
-  mutate(subject_diff = subject_end - subject_start)
 ```
 
-Not a pretty plot, but provides good information. It appears the the eukaryotic contamination is only from a short portion of the m84100_240128_024355_s2/48759857/ccs and m84100_240128_024355_s2/234751852/ccs reads. I will likely purge this section prior to assembly. 
+Using these results, I will remove the contaminants and then use the cleaned reads for assembly with hifiasm. 
+
+summarised_alignments_raw_reads -> bit scores >1000 for viral and prokaryotic
+euk_hit_for_removal -> the two euk hits from
+
+Look at length of all these dfs
+```{r}
+nrow(hifi_read_length)
+nrow(summarised_alignments_raw_reads)
+nrow(euk_hit_for_removal)
+```
+
+Sum of contamination and proportion of contamination to raw reads 
+```{r}
+(nrow(summarised_alignments_raw_reads) + nrow(euk_hit_for_removal))
+(nrow(summarised_alignments_raw_reads) + nrow(euk_hit_for_removal))/nrow(hifi_read_length) * 100
+```
+
+Sum of all contamination = 224
+This is only 0.003797649% of the raw reads, which is pretty amazing! 
+
+Summarize the contam information 
+```{r}
+summarised_alignments_raw_reads %>% 
+  dplyr::select(read_ID) %>% 
+  rbind(euk_hit_for_removal %>% 
+          dplyr::select(read_ID)) -> all_contam_removal
+
+hifi_read_length %>% 
+  dplyr::filter(!hifi_read_name %in% all_contam_removal$read_ID) -> all_contam_rem_good_hifi_read_list
+```
+
+`all_contam_rem_good_hifi_read_list` is the df of all contigs that passed contamination filtering. 
+
+Mean and sum calculation for cleaned raw reads 
+```{r}
+mean(all_contam_rem_good_hifi_read_list$length)
+sum(all_contam_rem_good_hifi_read_list$length)
+```
+
+Calculating rough sequencing depth for genome (assuming the genome size is 500mb)
+```{r}
+hifi_read_length %>% 
+  dplyr::filter(hifi_read_name %in% all_contam_rem_good_hifi_read_list$hifi_read_name) -> filt_raw_Reads
+(sum(filt_raw_Reads$length)/500000000)*((498620969/sum(filt_raw_Reads$length))*100)
+```
+
+I'm not sure where the 498620969 is coming from, but it is in Ben's [code](https://github.com/benyoung93/orbicella_faveolata_pacbio_genome_transcriptome/blob/main/ofav_genome_pipeline.Rmd) (lines 647-651). I'll need to figure that out, but it appears we have roughly 100x coverage! This is similar to Ben's results as well. 
+
+Write a table for filtering reads on Andromeda
+```{r}
+write.table(all_contam_rem_good_hifi_read_list,
+            file = "~/Desktop/PutnamLab/Apulchra_genome/all_contam_rem_good_hifi_read_list.txt",
+            row.names = F,
+            col.names = F,
+            quote = F)
+```
+
 
 
 
