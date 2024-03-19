@@ -165,7 +165,7 @@ pv_hits %>%
 length(unique(summarised_alignments_raw_reads$read_ID))
 ```
 
-There are 222 unique contigs (raw reads) that have some pv contamination. Look at the placement of the contam on a contig 
+There are 494 unique contigs (raw reads) that have some pv contamination. Look at the placement of the contam on a contig 
 ```{r}
 ggplot(pv_hits %>% 
          dplyr::filter(read_ID %in% "m84100_240128_024355_s2/140182293/ccs") %>% 
@@ -206,8 +206,8 @@ Sum of contamination and proportion of contamination to raw reads
 (nrow(summarised_alignments_raw_reads) + nrow(euk_hit_for_removal))/nrow(hifi_read_length) * 100
 ```
 
-Sum of all contamination = 224
-This is only 0.003797649% of the raw reads, which is pretty amazing! 
+Sum of all contamination = 496
+This is only 0.00840908% of the raw reads, which is pretty amazing! 
 
 Summarize the contam information 
 ```{r}
