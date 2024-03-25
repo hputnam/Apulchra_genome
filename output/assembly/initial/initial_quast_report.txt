@@ -1,0 +1,24 @@
+All statistics are based on contigs of size >= 500 bp, unless otherwise noted (e.g., "# contigs (>= 0 bp)" and "Total length (>= 0 bp)" include all contigs).
+
+Assembly                    apul.hifiasm.intial.bp.p_ctg  apul.hifiasm.intial.bp.hap1.p_ctg  apul.hifiasm.intial.bp.hap2.p_ctg  Amil.v2.01.chrs
+# contigs (>= 0 bp)         188                           275                                162                                854            
+# contigs (>= 1000 bp)      188                           275                                162                                851            
+# contigs (>= 5000 bp)      188                           273                                162                                748            
+# contigs (>= 10000 bp)     186                           271                                162                                672            
+# contigs (>= 25000 bp)     166                           246                                153                                545            
+# contigs (>= 50000 bp)     98                            163                                124                                445            
+Total length (>= 0 bp)      518528298                     481372407                          480341213                          475381253      
+Total length (>= 1000 bp)   518528298                     481372407                          480341213                          475378544      
+Total length (>= 5000 bp)   518528298                     481363561                          480341213                          475052084      
+Total length (>= 10000 bp)  518514885                     481349140                          480341213                          474498957      
+Total length (>= 25000 bp)  518188097                     480901871                          480181619                          472383091      
+Total length (>= 50000 bp)  515726224                     477880931                          479141568                          468867721      
+# contigs                   188                           275                                162                                854            
+Largest contig              45111900                      21532546                           22038975                           39361238       
+Total length                518528298                     481372407                          480341213                          475381253      
+GC (%)                      39.05                         39.03                              39.04                              39.06          
+N50                         16268372                      12353884                           13054353                           19840543       
+N75                         13007972                      7901416                            8791894                            1469964        
+L50                         11                            15                                 15                                 9              
+L75                         20                            28                                 26                                 23             
+# N's per 100 kbp           0.00                          0.00                               0.00                               7.79           
