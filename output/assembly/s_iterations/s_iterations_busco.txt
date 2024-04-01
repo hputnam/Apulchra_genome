@@ -1,0 +1,87 @@
+#### -s set to 0.30 (not conservative)
+
+##### PRIMARY ASSEMBLY
+
+        --------------------------------------------------
+        |Results from dataset metazoa_odb10               |
+        --------------------------------------------------
+        |C:93.3%[S:92.9%,D:0.4%],F:3.1%,M:3.6%,n:954      |
+        |890    Complete BUSCOs (C)                       |
+        |886    Complete and single-copy BUSCOs (S)       |
+        |4      Complete and duplicated BUSCOs (D)        |
+        |30     Fragmented BUSCOs (F)                     |
+        |34     Missing BUSCOs (M)                        |
+        |954    Total BUSCO groups searched               |
+        --------------------------------------------------
+        
+##### HAP1 ASSEMBLY
+
+        --------------------------------------------------
+        |Results from dataset metazoa_odb10               |
+        --------------------------------------------------
+        |C:93.4%[S:92.9%,D:0.5%],F:3.1%,M:3.5%,n:954      |
+        |891    Complete BUSCOs (C)                       |
+        |886    Complete and single-copy BUSCOs (S)       |
+        |5      Complete and duplicated BUSCOs (D)        |
+        |30     Fragmented BUSCOs (F)                     |
+        |33     Missing BUSCOs (M)                        |
+        |954    Total BUSCO groups searched               |
+        --------------------------------------------------
+
+##### HAP2 ASSEMBLY
+
+        --------------------------------------------------
+        |Results from dataset metazoa_odb10               |
+        --------------------------------------------------
+        |C:93.9%[S:93.6%,D:0.3%],F:2.8%,M:3.3%,n:954      |
+        |896    Complete BUSCOs (C)                       |
+        |893    Complete and single-copy BUSCOs (S)       |
+        |3      Complete and duplicated BUSCOs (D)        |
+        |27     Fragmented BUSCOs (F)                     |
+        |31     Missing BUSCOs (M)                        |
+        |954    Total BUSCO groups searched               |
+        --------------------------------------------------
+
+#### -s set to 0.80 (conservative)
+
+##### PRIMARY ASSEMBLY     
+
+        --------------------------------------------------
+        |Results from dataset metazoa_odb10               |
+        --------------------------------------------------
+        |C:93.5%[S:89.8%,D:3.7%],F:3.2%,M:3.3%,n:954      |
+        |892    Complete BUSCOs (C)                       |
+        |857    Complete and single-copy BUSCOs (S)       |
+        |35     Complete and duplicated BUSCOs (D)        |
+        |31     Fragmented BUSCOs (F)                     |
+        |31     Missing BUSCOs (M)                        |
+        |954    Total BUSCO groups searched               |
+        --------------------------------------------------
+
+##### HAP1 ASSEMBLY
+
+        --------------------------------------------------
+        |Results from dataset metazoa_odb10               |
+        --------------------------------------------------
+        |C:93.6%[S:91.4%,D:2.2%],F:3.1%,M:3.3%,n:954      |
+        |893    Complete BUSCOs (C)                       |
+        |872    Complete and single-copy BUSCOs (S)       |
+        |21     Complete and duplicated BUSCOs (D)        |
+        |30     Fragmented BUSCOs (F)                     |
+        |31     Missing BUSCOs (M)                        |
+        |954    Total BUSCO groups searched               |
+        --------------------------------------------------
+
+##### HAP2 ASSEMBLY
+
+        --------------------------------------------------
+        |Results from dataset metazoa_odb10               |
+        --------------------------------------------------
+        |C:92.3%[S:91.0%,D:1.3%],F:2.9%,M:4.8%,n:954      |
+        |880    Complete BUSCOs (C)                       |
+        |868    Complete and single-copy BUSCOs (S)       |
+        |12     Complete and duplicated BUSCOs (D)        |
+        |28     Fragmented BUSCOs (F)                     |
+        |46     Missing BUSCOs (M)                        |
+        |954    Total BUSCO groups searched               |
+        --------------------------------------------------
