@@ -89,6 +89,46 @@ contam_euk_pass_filt <- contam_euk_pass_filt %>%
 
 Not a pretty plot, but provides good information. It appears the the eukaryotic contamination is only from a short portion of the m84100_240128_024355_s2/48759857/ccs and m84100_240128_024355_s2/234751852/ccs reads. I will likely purge this section prior to assembly. 
 
+Read in and review the mito hits that passed the threshold 
+```{r}
+read.table(file = "~/Desktop/PutnamLab/Apulchra_genome/contaminant_hits_mito_passfilter_rr.txt", 
+           header = F) %>% 
+  dplyr::rename("read_ID" = 1, 
+         "subject_ID" = 2, 
+         "percent_identity" = 3, 
+         "align_length" = 4, 
+         "mismatches" = 5, 
+         "gap_open" = 6, 
+         "query_start" = 7, 
+         "query_end" = 8, 
+         "subject_start" = 9, 
+         "subject_end" = 10, 
+         "e_value" = 11, 
+         "bit_Score" = 12) %>%
+    group_by(read_ID) %>%
+  summarise(count = n()) -> mito_hit_for_removal
+```
+
+Read in and review the sym hits that passed the threshold 
+```{r}
+read.table(file = "~/Desktop/PutnamLab/Apulchra_genome/contaminant_hits_sym_passfilter_rr.txt", 
+           header = F) %>% 
+  dplyr::rename("read_ID" = 1, 
+         "subject_ID" = 2, 
+         "percent_identity" = 3, 
+         "align_length" = 4, 
+         "mismatches" = 5, 
+         "gap_open" = 6, 
+         "query_start" = 7, 
+         "query_end" = 8, 
+         "subject_start" = 9, 
+         "subject_end" = 10, 
+         "e_value" = 11, 
+         "bit_Score" = 12) %>%
+    group_by(read_ID) %>%
+  summarise(count = n()) -> sym_hit_for_removal
+```
+
 Read in prok and viral hits that pass the threshold 
 ```{r}
 read.table(file = "~/Desktop/PutnamLab/Apulchra_genome/contaminant_hits_pv_passfilter_rr.txt", 
@@ -190,29 +230,37 @@ ggplot(pv_hits %>%
 
 Using these results, I will remove the contaminants and then use the cleaned reads for assembly with hifiasm. 
 
-summarised_alignments_raw_reads -> bit scores >1000 for viral and prokaryotic
-euk_hit_for_removal -> the two euk hits from
+- summarised_alignments_raw_reads -> bit scores >1000 for viral and prokaryotic
+- euk_hit_for_removal -> the two euk hits from the contam file 
+- mito_hit_for_removal -> bit scores >1000 from mito genome 
+- sym_hit_for_removal -> 
 
 Look at length of all these dfs
 ```{r}
 nrow(hifi_read_length)
 nrow(summarised_alignments_raw_reads)
 nrow(euk_hit_for_removal)
+nrow(mito_hit_for_removal)
+nrow(sym_hit_for_removal)
 ```
 
 Sum of contamination and proportion of contamination to raw reads 
 ```{r}
-(nrow(summarised_alignments_raw_reads) + nrow(euk_hit_for_removal))
-(nrow(summarised_alignments_raw_reads) + nrow(euk_hit_for_removal))/nrow(hifi_read_length) * 100
+(nrow(summarised_alignments_raw_reads) + nrow(euk_hit_for_removal) + nrow(mito_hit_for_removal) + nrow(sym_hit_for_removal))
+(nrow(summarised_alignments_raw_reads) + nrow(euk_hit_for_removal) + nrow(mito_hit_for_removal) + nrow(sym_hit_for_removal))/nrow(hifi_read_length) * 100
 ```
 
-Sum of all contamination = 496
-This is only 0.00840908% of the raw reads, which is pretty amazing! 
+Sum of all contamination = 1922
+This is only 0.03258519% of the raw reads, which is pretty amazing! 
 
 Summarize the contam information 
 ```{r}
 summarised_alignments_raw_reads %>% 
   dplyr::select(read_ID) %>% 
+  rbind(mito_hit_for_removal %>% 
+          dplyr::select(read_ID)) %>% 
+  rbind(sym_hit_for_removal %>% 
+          dplyr::select(read_ID)) %>% 
   rbind(euk_hit_for_removal %>% 
           dplyr::select(read_ID)) -> all_contam_removal
 
@@ -234,7 +282,7 @@ Calculating rough sequencing depth for genome
 ```{r}
 hifi_read_length %>% 
   dplyr::filter(hifi_read_name %in% all_contam_rem_good_hifi_read_list$hifi_read_name) -> filt_raw_Reads
-(sum(filt_raw_Reads$length)/79183709778)*((79181142809/sum(filt_raw_Reads$length))*100)
+(sum(filt_raw_Reads$length)/79183709778)*((79168047656/sum(filt_raw_Reads$length))*100)
 ```
 
 I'm not sure if I am calculating depth correctly. I'll need to figure that out, but it appears we have roughly 100x coverage! This is similar to Ben's results as well. 
@@ -247,10 +295,3 @@ write.table(all_contam_rem_good_hifi_read_list,
             col.names = F,
             quote = F)
 ```
-
-
-
-
-
-
-
