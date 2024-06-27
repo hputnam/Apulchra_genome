@@ -1,0 +1,19 @@
+# BUSCO version is: 5.2.2 
+# The lineage dataset is: metazoa_odb10 (Creation date: 2024-01-08, number of genomes: 65, number of BUSCOs: 954)
+# Summarized benchmarking in BUSCO notation for file /data/putnamlab/jillashey/Apul_Genome/assembly/data/apul.hifiasm.s55_pa.p_ctg.fa
+# BUSCO was run in mode: genome
+# Gene predictor used: metaeuk
+
+	***** Results: *****
+
+	C:93.3%[S:92.0%,D:1.3%],F:3.1%,M:3.6%,n:954	   
+	890	Complete BUSCOs (C)			   
+	878	Complete and single-copy BUSCOs (S)	   
+	12	Complete and duplicated BUSCOs (D)	   
+	30	Fragmented BUSCOs (F)			   
+	34	Missing BUSCOs (M)			   
+	954	Total BUSCO groups searched		   
+
+Dependencies and versions:
+	hmmsearch: 3.3
+	metaeuk: GITDIR-NOTFOUND
