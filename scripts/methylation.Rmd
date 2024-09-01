@@ -1,0 +1,69 @@
+---
+title: "Methylation analysis of Apul genome"
+author: "Jill Ashey"
+date: "2024-09-01"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(tidyverse)
+```
+
+Read in chromosome names and lengths
+```{r}
+lengths <- read.table("../output/assembly/ntlink/chrom_lengths.txt")
+```
+
+Rename columns 
+```{r}
+lengths <- lengths %>%
+  rename(name = V1, length = V2)
+```
+
+Remove > in front of chromosome names 
+```{r}
+lengths$name <- gsub(">", "", lengths$name)
+```
+
+Read in CpG counts for each chromosome 
+```{r}
+cpg_counts <- read.delim("../output/methylation/CpG_chrom_counts.txt", header = F)
+```
+
+Remove extra rows 
+```{r}
+cpg_counts <- cpg_counts %>%
+  dplyr::filter(!str_detect(V1, "#"))
+```
+
+Separate into two columns 
+```{r}
+# Trim whitespace from the V1 column
+cpg_counts <- cpg_counts %>%
+  mutate(V1 = str_trim(V1))
+
+# Separate the column
+cpg_counts <- cpg_counts %>%
+  separate(col = V1, into = c("cpg_counts", "name"), sep = " ", extra = "merge")
+
+# Set to numeric 
+cpg_counts$cpg_counts <- as.numeric(cpg_counts$cpg_counts)
+```
+
+Join dfs together and calculate proportion of CpGs on each chromosome 
+```{r}
+all <- lengths %>%
+  full_join(cpg_counts, by = "name") %>%
+  mutate(proportion = (cpg_counts/length)*100)
+```
+
+
+```{r}
+ggplot(all, aes(x = length, y = cpg_counts)) +
+  geom_point()
+```
+ 
+
+
