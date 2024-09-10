@@ -59,11 +59,12 @@ all <- lengths %>%
   mutate(proportion = (cpg_counts/length)*100)
 ```
 
-
+Save CpG proportion of each genome to csv 
 ```{r}
-ggplot(all, aes(x = length, y = cpg_counts)) +
-  geom_point()
+write.csv(all, "../output/methylation/CpG_chrom_proportion.csv")
 ```
+
+
  
 
 
