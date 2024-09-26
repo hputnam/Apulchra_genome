@@ -11,6 +11,8 @@ knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
 ```
 
+## CpG motifs in genome - fuzznuc 
+
 Read in chromosome names and lengths
 ```{r}
 lengths <- read.table("../output/assembly/ntlink/chrom_lengths.txt")
@@ -65,6 +67,62 @@ write.csv(all, "../output/methylation/CpG_chrom_proportion.csv")
 ```
 
 
- 
+
+## pb-CpG-tools 
+
+```{r}
+cpg <- read.table("~/Desktop/PutnamLab/Apulchra_genome/Apul.pbmm2.combined.bed", header = F, sep="\t",stringsAsFactors=FALSE, quote="")
+colnames(cpg) <- c("contig", "start", "end", "mod_prob", "haplotype", "coverage", "est_mod_count", "est_unmod_count", "est_count_ratio")
+```
+
+Column information: 
+
+1. Reference name - contig name from reference genome (I used the genome that I assembled)
+2. Start coordinate
+3. End coordinate 
+4. Modification score - modification probability score or the likelihood that the cytosine in the CpG site is methylated. Higher score = higher likelihood of methylation at that site 
+5. Haplotype - total, probabilities combined across all reads 
+6. Coverage - number of reads covering CpG site 
+7. Estimated modified site count - number of CpG sites estimated to be methylated 
+8. Estimated unmodified site count - number of CpG sites estimated to be unmethylated 
+9. Discretized modification probability - ratio of modified to unmodified sites, indicating the confidence that the site is methylated (ie modified) or unmethylated 
+
+Filter so that coverage > 5 counts 
+```{r}
+cpg_filt <- cpg %>%
+  filter(coverage > 5)
+```
+
+Group by 'contig', and calculate statistics for 'mod_prob'
+```{r}
+summary_stats <- cpg_filt %>%
+  group_by(contig) %>%      # Group by 'contig'
+  summarise(
+    mean_mod_prob = mean(mod_prob, na.rm = TRUE),   # Calculate mean of 'mod_prob'
+    median_mod_prob = median(mod_prob, na.rm = TRUE), # Calculate median of 'mod_prob'
+    min_mod_prob = min(mod_prob, na.rm = TRUE),     # Calculate minimum of 'mod_prob'
+    max_mod_prob = max(mod_prob, na.rm = TRUE)      # Calculate maximum of 'mod_prob'
+  )
+```
+
+Make methylation categories and calculate how many are present in the genome 
+```{r}
+cpg <- cpg %>%
+  mutate(
+    methylation_category = case_when(
+      mod_prob >= 0 & mod_prob <= 20 ~ "unmethylated",        # Unmethylated (0-20 mod_prob)
+      mod_prob > 20 & mod_prob < 80 ~ "partially methylated", # Partially methylated (20-80 mod_prob)
+      mod_prob >= 80 & mod_prob <= 100 ~ "methylated"         # Methylated (80-100 mod_prob)
+    )
+  )
+
+# Count the number of rows in each category
+category_counts <- cpg %>%
+  group_by(contig, methylation_category) %>%
+  summarise(count = n())
+```
+
+
+
 
 
