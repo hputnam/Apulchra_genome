@@ -87,7 +87,7 @@ Column information:
 8. Estimated unmodified site count - number of CpG sites estimated to be unmethylated 
 9. Discretized modification probability - ratio of modified to unmodified sites, indicating the confidence that the site is methylated (ie modified) or unmethylated 
 
-Filter so that coverage > 5 counts 
+Filter so that coverage > 5 counts (ie 5x coverage)
 ```{r}
 cpg_filt <- cpg %>%
   filter(coverage > 5)
@@ -105,24 +105,110 @@ summary_stats <- cpg_filt %>%
   )
 ```
 
-Make methylation categories and calculate how many are present in the genome 
+Make methylation categories and calculate how many are present in the genome. [Trigg et al. 2021](https://onlinelibrary.wiley.com/doi/10.1111/1755-0998.13542) defined methylation categories as the following: 
+
+- Lowly or unmethylated = <10%
+- Partially  methylated = 10-50%
+- Methylated = 50-100%
+
 ```{r}
-cpg <- cpg %>%
+cpg_filt <- cpg_filt %>%
   mutate(
     methylation_category = case_when(
-      mod_prob >= 0 & mod_prob <= 20 ~ "unmethylated",        # Unmethylated (0-20 mod_prob)
-      mod_prob > 20 & mod_prob < 80 ~ "partially methylated", # Partially methylated (20-80 mod_prob)
-      mod_prob >= 80 & mod_prob <= 100 ~ "methylated"         # Methylated (80-100 mod_prob)
+      mod_prob >= 0 & mod_prob <= 10 ~ "unmethylated",        # Unmethylated (0-10 mod_prob)
+      mod_prob > 10 & mod_prob < 50 ~ "partially methylated", # Partially methylated (10-50 mod_prob)
+      mod_prob >= 50 & mod_prob <= 100 ~ "methylated"         # Methylated (50-100 mod_prob)
     )
   )
 
 # Count the number of rows in each category
-category_counts <- cpg %>%
-  group_by(contig, methylation_category) %>%
+category_counts <- cpg_filt %>%
+  group_by(methylation_category) %>%
   summarise(count = n())
+
+# # A tibble: 3 × 2
+#   methylation_category    count
+#   <chr>                   <int>
+# 1 methylated            2321595
+# 2 partially methylated   504047
+# 3 unmethylated         13102755
 ```
 
+Assess the percentages of each methylation category are present across the genome 
+```{r}
+category_counts
+sum(category_counts$count) # 15928397
 
+# Methylated 
+(2321595/15928397)*100
 
+# Partially methylayed
+(504047/15928397)*100
 
+# Unmethylated 
+(13102755/15928397)*100 
+```
+
+14.6% of the CpGs are methylated, 3.2% of the CpGs are partially methylated, and 82.3% of the CpGs are unmethylated. These results are comparable to the Mcap data from Trigg et al. 2021. For Mcap, 11.4% was methylated, 9% was partially methylated, and 79.6% was unmethylated. 
+
+## Bedtools intersect w/ pb-tools output
+
+```{r}
+cpg_gene <- read.table("~/Desktop/PutnamLab/Apulchra_genome/Apul_methylation_gene_only_intersect.bed", header = F, sep="\t",stringsAsFactors=FALSE, quote="")
+colnames(cpg_gene) <- c("cpg_contig", "cpg_start", "cpg_end", "mod_prob", "haplotype", "coverage", "est_mod_count", "est_unmod_count", "est_count_ratio", "gene_contig", "source", "type", "gene_start", "gene_end", "score", "strand", "phase", "attr")
+```
+
+Important to note: one row does not correspond to a single gene. A single gene can have multiple rows associated with it if there are multiple CpG sites in that single gene. 
+
+Filter so that coverage > 5 counts (ie 5x coverage)
+```{r}
+cpg_gene_filt <- cpg_gene %>%
+  filter(coverage > 5)
+```
+
+Make methylation categories and calculate how many are present in the genome. [Trigg et al. 2021](https://onlinelibrary.wiley.com/doi/10.1111/1755-0998.13542) defined methylation categories as the following: 
+
+- Lowly or unmethylated = <10%
+- Partially  methylated = 10-50%
+- Methylated = 50-100%
+
+```{r}
+cpg_gene_filt <- cpg_gene_filt %>%
+  mutate(
+    methylation_category = case_when(
+      mod_prob >= 0 & mod_prob <= 10 ~ "unmethylated",        # Unmethylated (0-10 mod_prob)
+      mod_prob > 10 & mod_prob < 50 ~ "partially methylated", # Partially methylated (10-50 mod_prob)
+      mod_prob >= 50 & mod_prob <= 100 ~ "methylated"         # Methylated (50-100 mod_prob)
+    )
+  )
+
+# Count the number of rows in each category
+category_counts <- cpg_gene_filt %>%
+  group_by(methylation_category) %>%
+  summarise(count = n())
+
+# # A tibble: 3 × 2
+#   methylation_category   count
+#   <chr>                  <int>
+# 1 methylated           1022495
+# 2 partially methylated  152440
+# 3 unmethylated         5067062
+```
+
+How many genes in each category? 
+```{r}
+gene_unmeth <- cpg_gene_filt %>%
+  filter(methylation_category == "unmethylated")
+length(unique(gene_unmeth$attr))
+
+gene_part_meth <- cpg_gene_filt %>%
+  filter(methylation_category == "partially methylated")
+length(unique(gene_part_meth$attr))
+
+gene_meth <- cpg_gene_filt %>%
+  filter(methylation_category == "methylated")
+length(unique(gene_meth$attr))
+```
+
+19069 genes are classified as methylated. If there are 44371 total genes in the Apul genome, then ~43% of genes are methylated. 
 
