@@ -1,0 +1,21 @@
+Statistics,Assembled Genome
+# contigs,174
+# contigs (≥0bp),174
+# contigs (≥1000bp),174
+# contigs (≥5000bp),174
+# contigs (≥10000bp),172
+# contigs (≥25000bp),153
+# contigs (≥50000bp),89
+Largest contig (bp),"45,111,900"
+Total length (bp),"518,313,916"
+Total length (≥0bp),"518,313,916"
+Total length (≥1000bp),"518,313,916"
+Total length (≥5000bp),"518,313,916"
+Total length (≥10000bp),"518,300,503"
+Total length (≥25000bp),"517,996,671"
+Total length (≥50000bp),"515,685,899"
+N50,"17,861,421"
+N75,"13,936,008"
+L50,10
+L75,18
+GC (%),39.05
