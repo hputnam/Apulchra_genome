@@ -1,6 +1,6 @@
-Species,Total assembly size (Mbp),Number of scaffolds,N50 (bp),Accession information,Citation,Complete BUSCOs (C),Complete and single-copy BUSCOs (S) ,Complete and duplicated BUSCOs (D) ,Fragmented BUSCOs (F),Missing BUSCOs (M) 
-Acropora pulchra,518,174,"17,861,421",PRJNA1162071,This study ,890,878,12,30,34
-Acropora millepora,475,854,"19,840,543",PRJNA633778,Fuller et al. 2020,,,,,
-Acropora digitifera,416,955,"1,856,000",BLFC01000001-BLFC01000955,Shinzato et al. 2021,861,845,14,15,78
-Acropora cervicornis,389,,"102,015",GCA_964034795.1,https://www.ebi.ac.uk/ena/browser/view/GCA_964034795.1?show=assembly-stats,,,,,
-Acropora palmata,438,,207871,GCA_964030595.1,https://www.ebi.ac.uk/ena/browser/view/GCA_964030595,,,,,
+Species,Total assembly size (Mbp),Number of scaffolds,N50 (bp),Accession information,Citation
+Acropora pulchra,518,174,"17,861,421",PRJNA1162071,This study 
+Acropora millepora,475,854,"19,840,543",PRJNA633778,Fuller et al. 2020
+Acropora digitifera,416,955,"1,856,000",BLFC01000001-BLFC01000955,Shinzato et al. 2021
+Acropora cervicornis,389,"10,233","102,015",GCA_964034795.1,https://www.ebi.ac.uk/ena/browser/view/GCA_964034795.1
+Acropora palmata,438,"7,739","207,871",GCA_964030595.1,https://www.ebi.ac.uk/ena/browser/view/GCA_964030595
