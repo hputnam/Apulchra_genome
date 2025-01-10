@@ -1,0 +1,20 @@
+---
+title: "genome plot"
+author: "Jill Ashey"
+date: "2025-01-10"
+output: html_document
+---
+
+Plot genome and methylation information along scaffolds using the R package [karyoploteR](https://bernatgel.github.io/karyoploter_tutorial/#GettingStarted). 
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+if (!requireNamespace("BiocManager", quietly = TRUE))
+  install.packages("BiocManager")
+BiocManager::install("karyoploteR")
+
+library(tidyverse)
+library(karyoploteR)
+```
+

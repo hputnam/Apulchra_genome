@@ -39,10 +39,12 @@ busco_reordered <- busco_long %>%
                            labels = c("Complete & single copy (Cs)",
                                       "Complete & duplicate copy (Cd)",
                                       "Fragmented (F)",
-                                      "Missing (M)"))) %>%
+                                      "Missing (M)")),
+         Species = factor(Species, 
+                          levels = c("Acropora palmata", "Acropora cervicornis", "Acropora digitifera", "Acropora millepora", "Acropora pulchra"))) %>%
   group_by(Species) %>%
   arrange(desc(Percentage), .by_group = TRUE) %>%
-  ungroup() 
+  ungroup()
 
 # Create a separate dataframe for labels
 label_data <- busco_reordered %>%

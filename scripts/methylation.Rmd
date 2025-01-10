@@ -73,6 +73,7 @@ write.csv(all, "../output/methylation/CpG_chrom_proportion.csv")
 ```{r}
 cpg <- read.table("~/Desktop/PutnamLab/Apulchra_genome/Apul.pbmm2.combined.bed", header = F, sep="\t",stringsAsFactors=FALSE, quote="")
 colnames(cpg) <- c("contig", "start", "end", "mod_prob", "haplotype", "coverage", "est_mod_count", "est_unmod_count", "est_count_ratio")
+dim(cpg)
 ```
 
 Column information: 
@@ -124,7 +125,7 @@ cpg_filt <- cpg_filt %>%
 # Count the number of rows in each category
 category_counts <- cpg_filt %>%
   group_by(methylation_category) %>%
-  summarise(count = n())
+  summarise(count = n()); category_counts
 
 # # A tibble: 3 × 2
 #   methylation_category    count
@@ -153,10 +154,17 @@ sum(category_counts$count) # 15928397
 
 ## Bedtools intersect w/ pb-tools output
 
+### Gene intersect 
+
+Read in gene methylation intersection information
 ```{r}
-cpg_gene <- read.table("~/Desktop/PutnamLab/Apulchra_genome/Apul_methylation_gene_only_intersect.bed", header = F, sep="\t",stringsAsFactors=FALSE, quote="")
-colnames(cpg_gene) <- c("cpg_contig", "cpg_start", "cpg_end", "mod_prob", "haplotype", "coverage", "est_mod_count", "est_unmod_count", "est_count_ratio", "gene_contig", "source", "type", "gene_start", "gene_end", "score", "strand", "phase", "attr")
+cpg_gene <- read.table("~/Desktop/PutnamLab/Apulchra_genome/gene_methylation.bed", header = F, sep="\t",stringsAsFactors=FALSE, quote="")
+colnames(cpg_gene) <- c("gene_contig", "gene_start", "gene_end", "gene_name", "cpg_contig", "cpg_start", "cpg_end", "mod_prob", "haplotype", "coverage", "est_mod_count", "est_unmod_count", "est_count_ratio")
+length(unique(cpg_gene$gene_name))
+dim(cpg_gene)
 ```
+
+There are 44853 genes that have at least one CpG site There are 8251841 CpG sites total in the gemes 
 
 Important to note: one row does not correspond to a single gene. A single gene can have multiple rows associated with it if there are multiple CpG sites in that single gene. 
 
@@ -164,7 +172,11 @@ Filter so that coverage > 5 counts (ie 5x coverage)
 ```{r}
 cpg_gene_filt <- cpg_gene %>%
   filter(coverage > 5)
+length(unique(cpg_gene_filt$gene_name))
+dim(cpg_gene_filt)
 ```
+
+There are 44816 genes that have coverage >5 There are 8,247,540 CpG sites total in the genes that have >5x coverage.
 
 Make methylation categories and calculate how many are present in the genome. [Trigg et al. 2021](https://onlinelibrary.wiley.com/doi/10.1111/1755-0998.13542) defined methylation categories as the following: 
 
@@ -181,34 +193,331 @@ cpg_gene_filt <- cpg_gene_filt %>%
       mod_prob >= 50 & mod_prob <= 100 ~ "methylated"         # Methylated (50-100 mod_prob)
     )
   )
-
-# Count the number of rows in each category
-category_counts <- cpg_gene_filt %>%
-  group_by(methylation_category) %>%
-  summarise(count = n())
-
-# # A tibble: 3 × 2
-#   methylation_category   count
-#   <chr>                  <int>
-# 1 methylated           1022495
-# 2 partially methylated  152440
-# 3 unmethylated         5067062
 ```
 
-How many genes in each category? 
+Summarize data and plot for exons only 
 ```{r}
-gene_unmeth <- cpg_gene_filt %>%
-  filter(methylation_category == "unmethylated")
-length(unique(gene_unmeth$attr))
+summary_data_gene <- cpg_gene_filt %>%
+  group_by(methylation_category) %>%
+  summarise(count = n(), .groups = 'drop') %>%
+  mutate(methylation_category = factor(methylation_category, 
+                                       levels = c("methylated", "partially methylated", "unmethylated")))
+levels = c("methylated", "partially methylated", "unmethylated")
 
-gene_part_meth <- cpg_gene_filt %>%
-  filter(methylation_category == "partially methylated")
-length(unique(gene_part_meth$attr))
+# Calculate percentages
+summary_data_gene <- summary_data_gene %>%
+  mutate(percentage = count / sum(count) * 100)
 
-gene_meth <- cpg_gene_filt %>%
-  filter(methylation_category == "methylated")
-length(unique(gene_meth$attr))
+# Create the plot
+ggplot(summary_data_gene, aes(x = "", y = percentage, fill = methylation_category)) +
+  geom_bar(stat = "identity", width = 1) +
+  scale_fill_manual(values = c("methylated" = "red", 
+                               "partially methylated" = "yellow", 
+                               "unmethylated" = "blue")) +
+  #coord_polar("y", start = 0) +
+  theme_void() +
+  labs(fill = "Methylation Category",
+       title = "Methylation Categories Across All Genes") +
+  geom_text(aes(label = sprintf("%.1f%%", percentage)), 
+            position = position_stack(vjust = 0.5))
+# Save the plot
+#ggsave("exon_methylation_categories.pdf", width = 12, height = 8)
 ```
 
-19069 genes are classified as methylated. If there are 44371 total genes in the Apul genome, then ~43% of genes are methylated. 
+### Exon intersection
+
+Read in exon methylation intersection information
+```{r}
+cpg_exon <- read.table("~/Desktop/PutnamLab/Apulchra_genome/exon_methylation.bed", header = F, sep="\t",stringsAsFactors=FALSE, quote="")
+colnames(cpg_exon) <- c("exon_contig", "exon_start", "exon_end", "exon_name", "cpg_contig", "cpg_start", "cpg_end", "mod_prob", "haplotype", "coverage", "est_mod_count", "est_unmod_count", "est_count_ratio")
+length(unique(cpg_exon$exon_name))
+dim(cpg_exon)
+```
+
+There are 44811 genes that have a CpG site in at least one of their exons. There are 2,322,654 CpG sites total in the exons. 
+
+Important to note: one row does not correspond to a single exon A single exon can have multiple rows associated with it if there are multiple CpG sites in that single exon 
+
+Filter so that coverage > 5 counts (ie 5x coverage)
+```{r}
+cpg_exon_filt <- cpg_exon %>%
+  filter(coverage > 5)
+length(unique(cpg_exon_filt$exon_name))
+dim(cpg_exon_filt)
+```
+
+There are 44770 genes that have coverage >5 in their exons. There are 2320826 CpG sites total in the exons that have >5x coverage.
+
+Make methylation categories and calculate how many are present in the genome. [Trigg et al. 2021](https://onlinelibrary.wiley.com/doi/10.1111/1755-0998.13542) defined methylation categories as the following: 
+
+- Lowly or unmethylated = <10%
+- Partially  methylated = 10-50%
+- Methylated = 50-100%
+
+```{r}
+cpg_exon_filt <- cpg_exon_filt %>%
+  mutate(
+    methylation_category = case_when(
+      mod_prob >= 0 & mod_prob <= 10 ~ "unmethylated",        # Unmethylated (0-10 mod_prob)
+      mod_prob > 10 & mod_prob < 50 ~ "partially methylated", # Partially methylated (10-50 mod_prob)
+      mod_prob >= 50 & mod_prob <= 100 ~ "methylated"         # Methylated (50-100 mod_prob)
+    )
+  )
+```
+
+Summarize data and plot for exons only 
+```{r}
+summary_data_exon <- cpg_exon_filt %>%
+  group_by(methylation_category) %>%
+  summarise(count = n(), .groups = 'drop') %>%
+  mutate(methylation_category = factor(methylation_category, 
+                                       levels = c("methylated", "partially methylated", "unmethylated")))
+levels = c("methylated", "partially methylated", "unmethylated")
+
+# Calculate percentages
+summary_data_exon <- summary_data_exon %>%
+  mutate(percentage = count / sum(count) * 100) %>%
+  mutate(type = "Exon")
+
+# Create the plot
+ggplot(summary_data_exon, aes(x = "", y = percentage, fill = methylation_category)) +
+  geom_bar(stat = "identity", width = 1) +
+  scale_fill_manual(values = c("methylated" = "red", 
+                               "partially methylated" = "yellow", 
+                               "unmethylated" = "blue")) +
+  #coord_polar("y", start = 0) +
+  theme_void() +
+  labs(fill = "Methylation Category",
+       title = "Methylation Categories Across All Exons") +
+  geom_text(aes(label = sprintf("%.1f%%", percentage)), 
+            position = position_stack(vjust = 0.5))
+# Save the plot
+#ggsave("exon_methylation_categories.pdf", width = 12, height = 8)
+```
+
+### Intron intersection
+
+Read in intron methylation intersection information
+```{r}
+cpg_intron <- read.table("~/Desktop/PutnamLab/Apulchra_genome/intron_methylation.bed", header = F, sep="\t",stringsAsFactors=FALSE, quote="")
+colnames(cpg_intron) <- c("intron_contig", "intron_start", "intron_end", "intron_name", "cpg_contig", "cpg_start", "cpg_end", "mod_prob", "haplotype", "coverage", "est_mod_count", "est_unmod_count", "est_count_ratio")
+length(unique(cpg_intron$intron_name))
+dim(cpg_intron)
+```
+
+There are 32019 genes that have a CpG site in at least one of their introns. There are 5,796,203 CpG sites total in the introns. 
+
+Important to note: one row does not correspond to a single intron. A single intron can have multiple rows associated with it if there are multiple CpG sites in that single intron
+
+Filter so that coverage > 5 counts (ie 5x coverage)
+```{r}
+cpg_intron_filt <- cpg_intron %>%
+  filter(coverage > 5)
+length(unique(cpg_intron_filt$intron_name))
+dim(cpg_intron_filt)
+```
+
+There are 31991 genes that have coverage >5 in their introns There are 5793730 CpG sites total in the introns that have >5x coverage.
+
+Make methylation categories and calculate how many are present in the genome. [Trigg et al. 2021](https://onlinelibrary.wiley.com/doi/10.1111/1755-0998.13542) defined methylation categories as the following: 
+
+- Lowly or unmethylated = <10%
+- Partially  methylated = 10-50%
+- Methylated = 50-100%
+
+```{r}
+cpg_intron_filt <- cpg_intron_filt %>%
+  mutate(
+    methylation_category = case_when(
+      mod_prob >= 0 & mod_prob <= 10 ~ "unmethylated",        # Unmethylated (0-10 mod_prob)
+      mod_prob > 10 & mod_prob < 50 ~ "partially methylated", # Partially methylated (10-50 mod_prob)
+      mod_prob >= 50 & mod_prob <= 100 ~ "methylated"         # Methylated (50-100 mod_prob)
+    )
+  )
+```
+
+Summarize data and plot for introns only 
+```{r}
+summary_data_intron <- cpg_intron_filt %>%
+  group_by(methylation_category) %>%
+  summarise(count = n(), .groups = 'drop') %>%
+  mutate(methylation_category = factor(methylation_category, 
+                                       levels = c("methylated", "partially methylated", "unmethylated")))
+levels = c("methylated", "partially methylated", "unmethylated")
+
+# Calculate percentages
+summary_data_intron <- summary_data_intron %>%
+  mutate(percentage = count / sum(count) * 100) %>%
+  mutate(type = "Intron")
+
+# Create the plot
+ggplot(summary_data_intron, aes(x = "", y = percentage, fill = methylation_category)) +
+  geom_bar(stat = "identity", width = 1) +
+  scale_fill_manual(values = c("methylated" = "red", 
+                               "partially methylated" = "yellow", 
+                               "unmethylated" = "blue")) +
+  #coord_polar("y", start = 0) +
+  theme_void() +
+  labs(fill = "Methylation Category",
+       title = "Methylation Categories Across All Introns") +
+  geom_text(aes(label = sprintf("%.1f%%", percentage)), 
+            position = position_stack(vjust = 0.5))
+# Save the plot
+#ggsave("exon_methylation_categories.pdf", width = 12, height = 8)
+```
+
+### Intergenic intersection
+
+Read in intron methylation intersection information
+```{r}
+cpg_inter <- read.table("~/Desktop/PutnamLab/Apulchra_genome/intergenic_methylation.bed", header = F, sep="\t",stringsAsFactors=FALSE, quote="")
+colnames(cpg_inter) <- c("inter_contig", "inter_start", "inter_end", "cpg_contig", "cpg_start", "cpg_end", "mod_prob", "haplotype", "coverage", "est_mod_count", "est_unmod_count", "est_count_ratio")
+dim(cpg_inter)
+```
+
+There are 8,929,081 CpG sites total in the intergenic region. 
+
+Filter so that coverage > 5 counts (ie 5x coverage)
+```{r}
+cpg_inter_filt <- cpg_inter %>%
+  filter(coverage > 5)
+dim(cpg_inter_filt)
+```
+
+There are 8922541 CpG sites total in the intergenic region that have >5x coverage.
+
+Make methylation categories and calculate how many are present in the genome. [Trigg et al. 2021](https://onlinelibrary.wiley.com/doi/10.1111/1755-0998.13542) defined methylation categories as the following: 
+
+- Lowly or unmethylated = <10%
+- Partially  methylated = 10-50%
+- Methylated = 50-100%
+
+```{r}
+cpg_inter_filt <- cpg_inter_filt %>%
+  mutate(
+    methylation_category = case_when(
+      mod_prob >= 0 & mod_prob <= 10 ~ "unmethylated",        # Unmethylated (0-10 mod_prob)
+      mod_prob > 10 & mod_prob < 50 ~ "partially methylated", # Partially methylated (10-50 mod_prob)
+      mod_prob >= 50 & mod_prob <= 100 ~ "methylated"         # Methylated (50-100 mod_prob)
+    )
+  )
+```
+
+Summarize data and plot for intergenic region only 
+```{r}
+summary_data_inter <- cpg_inter_filt %>%
+  group_by(methylation_category) %>%
+  summarise(count = n(), .groups = 'drop') %>%
+  mutate(methylation_category = factor(methylation_category, 
+                                       levels = c("methylated", "partially methylated", "unmethylated")))
+levels = c("methylated", "partially methylated", "unmethylated")
+
+# Calculate percentages
+summary_data_inter <- summary_data_inter %>%
+  mutate(percentage = count / sum(count) * 100) %>%
+  mutate(type = "Intergenic")
+
+# Create the plot
+ggplot(summary_data_inter, aes(x = "", y = percentage, fill = methylation_category)) +
+  geom_bar(stat = "identity", width = 1) +
+  scale_fill_manual(values = c("methylated" = "red", 
+                               "partially methylated" = "yellow", 
+                               "unmethylated" = "blue")) +
+  #coord_polar("y", start = 0) +
+  theme_void() +
+  labs(fill = "Methylation Category",
+       title = "Methylation Categories Across Intergenic region") +
+  geom_text(aes(label = sprintf("%.1f%%", percentage)), 
+            position = position_stack(vjust = 0.5))
+# Save the plot
+#ggsave("exon_methylation_categories.pdf", width = 12, height = 8)
+```
+
+
+## Assess methylation across introns, exons, intergenic region
+
+Bind summary data
+```{r}
+summary_data_all <- rbind(summary_data_exon, summary_data_intron, summary_data_inter)
+```
+
+Plot percentages
+```{r}
+# Remove unmethylated as a category 
+summary_data_meth <- summary_data_all %>%
+  dplyr::filter(methylation_category != "unmethylated")
+  
+# Ensure the order of factors is correct
+summary_data_meth$type <- factor(summary_data_meth$type, 
+                                levels = c("Exon", "Intron", "Intergenic"))
+summary_data_meth$methylation_category <- factor(summary_data_meth$methylation_category, levels = c("partially methylated", "methylated"))
+
+# Create the plot
+plot1 <- ggplot(summary_data_meth, aes(x = type, y = percentage, fill = methylation_category)) +
+  geom_bar(stat = "identity", width = 0.7, color = "black", size = 0.3) +
+  scale_fill_manual(values = c("methylated" = "#E64B35", 
+                               "partially methylated" = "#4DBBD5"),
+                    labels = c("Methylated", "Partially methylated")) +
+  scale_y_continuous(labels = percent_format(scale = 1), expand = c(0, 0)) +
+  scale_y_continuous(
+    labels = percent_format(scale = 1), 
+    expand = c(0, 0),
+    breaks = seq(0, 20, by = 5),
+    limits = c(0, 20)
+  ) +
+  coord_cartesian(clip = "off") +
+  labs(x = NULL, 
+       y = "Percentage of CpG sites", 
+       fill = "Methylation category") +
+  theme_minimal(base_size = 15) +
+  theme(
+    plot.title = element_text(hjust = 0.5, face = "bold", size = 16),
+    plot.caption = element_text(hjust = 0, face = "italic", size = 10),
+    axis.title.y = element_text(margin = margin(r = 10)),
+    axis.text = element_text(color = "black"),
+    axis.text.x = element_text(face = "bold"),
+    legend.position = "right",
+    legend.title = element_text(face = "bold"),
+    panel.grid.major.x = element_blank(),
+    panel.grid.minor = element_blank(),
+    plot.margin = margin(20, 20, 20, 20)
+  );plot1
+
+ggsave("../output/methylation/methylation_feature_percentage.pdf", plot = plot1, width = 8, height = 6, dpi = 300)
+ggsave("../output/methylation/methylation_feature_percentage.png", plot = plot1, width = 8, height = 6, dpi = 300)
+```
+
+Plot counts
+```{r}
+# Create the plot
+plot2 <- ggplot(summary_data_all, aes(x = type, y = count, fill = methylation_category)) +
+  geom_bar(stat = "identity", width = 0.7, color = "black", size = 0.3) +
+  scale_fill_manual(values = c("methylated" = "#E64B35", 
+                               "partially methylated" = "#4DBBD5", 
+                               "unmethylated" = "#00A087"),
+                    labels = c("Methylated", "Partially methylated", "Unmethylated")) +
+  scale_y_continuous(labels = comma_format(), expand = c(0, 0)) +
+  coord_cartesian(clip = "off") +
+  labs(x = NULL, 
+       y = "Count of CpG sites", 
+       fill = "Methylation category") +
+  theme_minimal(base_size = 15) +
+  theme(
+    plot.title = element_text(hjust = 0.5, face = "bold", size = 16),
+    plot.caption = element_text(hjust = 0, face = "italic", size = 10),
+    axis.title.y = element_text(margin = margin(r = 10)),
+    axis.text = element_text(color = "black"),
+    axis.text.x = element_text(face = "bold"),
+    legend.position = "right",
+    legend.title = element_text(face = "bold"),
+    panel.grid.major.x = element_blank(),
+    panel.grid.minor = element_blank(),
+    plot.margin = margin(20, 20, 20, 20)
+  );plot2
+
+# Save the plot
+ggsave("../output/methylation/methylation_feature_counts.pdf", plot = plot2, width = 8, height = 6, dpi = 300)
+ggsave("../output/methylation/methylation_feature_counts.png", plot = plot2, width = 8, height = 6, dpi = 300)
+```
+
 
