@@ -26,7 +26,9 @@ custom.genome <- toGRanges(data.frame(chr=c("A", "B"), start=c(1, 1), end=c(100,
 kp <- plotKaryotype(genome = custom.genome)
 ```
 
-Read in my own data 
+Hooray it works. 
+
+## Read in my own data 
 ```{r}
 chroms <- read.delim("../output/assembly/ntlink/chrom_lengths.txt", sep = "", header = F)
 colnames(chroms) <- c("chr", "end")
@@ -44,9 +46,22 @@ Rearrange columns and organize rows
 ```{r}
 chroms <- chroms %>%
   dplyr::select(chr, start, end) %>%
-  dplyr::arrange(desc(end)) %>%
-  dplyr::slice(140:150) # take 10 chromosomes
+  dplyr::arrange(desc(end))# %>%
+  #dplyr::slice(140:150) # take 10 chromosomes
 ```
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 Make custom genome plot
 ```{r}
@@ -116,10 +131,10 @@ filtered_cpg$col <- colorRamp2(c(0, max(filtered_cpg$mod_prob_prob)), c("blue", 
 filtered_cpg_gr <- toGRanges(filtered_cpg)
 
 # Open a PNG device to save the plot
-png("../output/methylation/ten_scaffolds_methylation.png", width = 100, height = 20, units = "cm", res = 300)
+png("../output/methylation/ten_scaffolds_methylation.png", width = 40, height = 20, units = "cm", res = 300)
 
 # Create the karyotype plot
-kp <- plotKaryotype(genome = custom, cytobands = features, ideogram.plotter = NULL, plot.type = 2)
+kp <- plotKaryotype(genome = custom, cytobands = features, ideogram.plotter = NULL, plot.type = 2, circular = T)
 
 # Add background data (if needed)
 kpDataBackground(kp, data.panel = 1)
@@ -180,6 +195,98 @@ dev.off()
 
 
 
+
+Trying to plot first 10000bp from the 10 longest chromosomes
+Read in my own data 
+```{r}
+chroms <- read.delim("../output/assembly/ntlink/chrom_lengths.txt", sep = "", header = F)
+colnames(chroms) <- c("chr", "end")
+
+# Remove > from chr name
+chroms$chr <- gsub(">", "", chroms$chr)
+```
+
+Add the starting position (1) to all rows
+```{r}
+chroms$start <- 1
+```
+
+Rearrange columns and organize rows
+```{r}
+chroms <- chroms %>%
+  dplyr::select(chr, start, end) %>%
+  dplyr::arrange(desc(end)) %>%
+  dplyr::slice(1:10)
+
+chroms$end <- 100000
+
+top_10_chroms <- chroms$chr
+```
+
+```{r}
+# Filter data for top 10 chromosomes and first 20,000 bp
+filtered_features <- features[features$chr %in% top_10_chroms & 
+                              features$start <= 100000, ]
+```
+
+```{r}
+# Create GRanges objects
+cpg_gr <- makeGRangesFromDataFrame(chroms, 
+                                   keep.extra.columns = TRUE,
+                                   seqnames.field = "chr",
+                                   start.field = "start",
+                                   end.field = "end")
+features_gr <- makeGRangesFromDataFrame(filtered_features,
+                                        keep.extra.columns = TRUE)
+```
+
+```{r}
+# Filter data for top 10 chromosomes and first 20,000 bp
+cpg_blah <- cpg[cpg$contig %in% top_10_chroms & 
+                              cpg$start <= 100000, ]
+
+# Filter cpg to only include contigs present in chroms
+filtered_cpg <- cpg_blah %>%
+  filter(contig %in% unique(chroms$chr)) %>%
+  filter(coverage >5)
+
+# Make mod_prob into true prob between 0 and 1
+filtered_cpg <- filtered_cpg %>%
+  mutate(mod_prob_prob = mod_prob/100)
+
+filtered_cpg$col <- colorRamp2(c(0, max(filtered_cpg$mod_prob_prob)), c("blue", "red"))(filtered_cpg$mod_prob_prob)
+
+filt_gr <- toGRanges(filtered_cpg)
+```
+
+
+```{r}
+# Open a PNG device to save the plot
+png("../output/methylation/top_ten_scaffolds_methylation_100000bp.png", width = 50, height = 30, units = "cm", res = 300)
+
+# Plot
+kp <- plotKaryotype(genome = cpg_gr, cytobands = features_gr, ideogram.plotter = NULL, plot.type = 2, margins = c(60, 40))
+
+# Add background data (if needed)
+#kpDataBackground(kp, data.panel = 1)
+
+# Add cytobands with custom colors
+kpAddCytobands(kp, color.table = color_table)
+
+# Plot mod prob as points in first panel -- methylation probability 
+kpPoints(kp, chr = filtered_cpg$contig, x = filtered_cpg$start, y = filtered_cpg$mod_prob_prob, col = filtered_cpg$col, pch = 16, cex = 0.5)
+
+# Mark CpG sites
+#kpPlotMarkers(kp, data = cpg_gr, labels = NULL, line.color = "black", marker.parts = c(0.5, 0.5), r1 = 0.5)
+
+# Add axis
+kpAxis(kp, ymin = 0, ymax = 1, tick.pos = c(0, .5, 1), side = 2)
+#kpAxis(kp, side = 1, tick.pos = c(0, 5000), labels = c("0", "5,000"))
+
+dev.off()
+```
+
+I dont think there is a way to add an x-axis (see [axis](https://bernatgel.github.io/karyoploter_tutorial//Tutorial/Axis/Axis.html) in package tutorial) or a legend...
 
 
 
