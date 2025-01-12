@@ -165,3 +165,29 @@ dev.off()
 I dont think there is a way to add an x-axis (see [axis](https://bernatgel.github.io/karyoploter_tutorial//Tutorial/Axis/Axis.html) in package tutorial) or a legend...
 
 There are a lot of cool applications for this package and genome plotting, see tutorial [here](https://bernatgel.github.io/karyoploter_tutorial/). 
+
+Plot as pdf?
+```{r}
+# Open a pdf device to save the plot
+pdf("../output/methylation/top_ten_scaffolds_methylation_100000bp.pdf", width = 49, height = 30)
+
+# Plot
+kp <- plotKaryotype(genome = chroms_gr, cytobands = filtered_features, ideogram.plotter = NULL, plot.type = 1, margins = c(60, 40), cex = 4)
+
+# Add background data (if needed)
+#kpDataBackground(kp, data.panel = 1)
+
+# Add cytobands with custom colors
+kpAddCytobands(kp, color.table = color_table)
+
+# Plot mod prob as points in first panel -- methylation probability 
+kpPoints(kp, chr = filtered_cpg$contig, x = filtered_cpg$start, y = filtered_cpg$mod_prob_prob, col = filtered_cpg$col, pch = 16, cex = 1)
+
+# Mark CpG sites
+#kpPlotMarkers(kp, data = cpg_gr, labels = NULL, line.color = "black", marker.parts = c(0.5, 0.5), r1 = 0.5)
+
+# Add axis
+kpAxis(kp, ymin = 0, ymax = 1, tick.pos = c(0, .5, 1), side = 1, cex = 3)
+
+dev.off()
+```
