@@ -5,14 +5,14 @@ date: "2025-01-10"
 output: html_document
 ---
 
-Plot genome and methylation information along scaffolds using the R package [karyoploteR](https://bernatgel.github.io/karyoploter_tutorial/#GettingStarted). 
+Plot genome and methylation information along scaffolds using the R package [karyoploteR](https://bioconductor.org/packages/release/bioc/html/karyoploteR.html). I use the terms chromosomes and scaffolds interchangeably in this script (apologies). 
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 
-if (!requireNamespace("BiocManager", quietly = TRUE))
-  install.packages("BiocManager")
-BiocManager::install("karyoploteR")
+#if (!requireNamespace("BiocManager", quietly = TRUE))
+#  install.packages("BiocManager")
+#BiocManager::install("karyoploteR")
 
 library(tidyverse)
 library(karyoploteR)
@@ -46,31 +46,19 @@ Rearrange columns and organize rows
 ```{r}
 chroms <- chroms %>%
   dplyr::select(chr, start, end) %>%
-  dplyr::arrange(desc(end))# %>%
-  #dplyr::slice(140:150) # take 10 chromosomes
+  dplyr::arrange(desc(end)) %>%
+  dplyr::slice(1:10) # take top 10 chromosomes (or however many you want to plot)
+  
+# Make top 10 chromosome names into a character vector 
+top_10_chroms <- chroms$chr
 ```
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-Make custom genome plot
+Manually set 'end' - do this if you want to plot a specific number of bp. Here I am plotting the first 100,000 bp of the 10 longest scaffolds in the genome. Its difficult to visualize when the scaffolds are so long. 
 ```{r}
-custom <- toGRanges(chroms)
-
-kp <- plotKaryotype(genome = custom)
+chroms$end <- 100000
 ```
 
-Read in feature types
+## Read in feature data 
 ```{r}
 exon <- read.table("~/Desktop/PutnamLab/Apulchra_genome/exons.bed", header = F, sep="\t",stringsAsFactors=FALSE, quote="")
 colnames(exon) <- c("chr", "start", "end", "gene")
@@ -84,7 +72,7 @@ inter$gene <- NA
 inter$Type <- "Intergenic"
 ```
 
-Bind feature dfs together 
+Bind feature dfs together and set colors of feature type. 
 ```{r}
 features <- rbind(exon, intron, inter)
 
@@ -92,146 +80,54 @@ features <- rbind(exon, intron, inter)
 features$gieStain <- ifelse(features$Type == "Exon", "purple",
                      ifelse(features$Type == "Intron", "orange",
                      ifelse(features$Type == "Intergenic", "gray", NA)))
-```
 
-```{r}
-#cust_feat <- toGRanges(features)
-# Create a custom color table
+# Create a custom color table for features 
 color_table <- c("purple" = "purple", "orange" = "orange", "gray" = "gray")
-
-kp <- plotKaryotype(genome = custom, cytobands = features)
-
-kp <- plotKaryotype(genome = custom, cytobands = features, ideogram.plotter = NULL, plot.type = 1)
-kpDataBackground(kp, data.panel = 1)
-kpAddCytobands(kp, color.table = color_table)
 ```
+The `gieStain` is specific to this package and sets the colors. It is based on UCSC's provided cytoband information, specifically whole genome Giemsa Stain track information (see info [here](https://genome.ucsc.edu/cgi-bin/hgTables)). The plotting features of this package are expecting colors in the `gieStain` column. 
 
-Read in methylation data (commented out because it takes a while to load)
-```{r}
-# cpg <- read.table("~/Desktop/PutnamLab/Apulchra_genome/Apul.pbmm2.combined.bed", header = F, sep="\t",stringsAsFactors=FALSE, quote="")
-# colnames(cpg) <- c("contig", "start", "end", "mod_prob", "haplotype", "coverage", "est_mod_count", "est_unmod_count", "est_count_ratio")
-# dim(cpg)
-
-# Filter cpg to only include contigs present in chroms
-filtered_cpg <- cpg %>%
-  filter(contig %in% unique(chroms$chr)) %>%
-  filter(coverage >5)
-
-# Make mod_prob into true prob between 0 and 1
-filtered_cpg <- filtered_cpg %>%
-  mutate(mod_prob_prob = mod_prob/100)
-```
-
-Plot
-```{r}
-# Prepare color mapping for methylation probabilities based on mod_prob
-filtered_cpg$col <- colorRamp2(c(0, max(filtered_cpg$mod_prob_prob)), c("blue", "red"))(filtered_cpg$mod_prob_prob)
-
-# Convert filtered_cpg to GRanges object
-filtered_cpg_gr <- toGRanges(filtered_cpg)
-
-# Open a PNG device to save the plot
-png("../output/methylation/ten_scaffolds_methylation.png", width = 40, height = 20, units = "cm", res = 300)
-
-# Create the karyotype plot
-kp <- plotKaryotype(genome = custom, cytobands = features, ideogram.plotter = NULL, plot.type = 2, circular = T)
-
-# Add background data (if needed)
-kpDataBackground(kp, data.panel = 1)
-
-# Add cytobands with custom colors
-kpAddCytobands(kp, color.table = color_table)
-
-# Determine appropriate y-axis limits based on mod_prob values
-#y_limits <- c(0, max(filtered_cpg$mod_prob) * 1.1)  # Set a bit above max for better visibility
-
-# Plot mod_prob as points in the first panel with specified y-limits
-kpPoints(kp, chr=filtered_cpg$contig, x=filtered_cpg$start, y=filtered_cpg$mod_prob_prob, col=filtered_cpg$col, pch=16)
-
-# Plot regions with colors based on mod_prob in the second panel
-kpPlotRegions(kp, data=filtered_cpg_gr, col="black", data.panel=2)
-
-# Close the graphics device
-dev.off()
-```
-
-try to plot 10 longest scaffolds but only plot the first 10000bp
-
-
-still in progress below
-
-```{r}
-# Filter filtered_cpg to include only the first 10,000 bp of each chromosome
-filtered_cpg_limited <- filtered_cpg[filtered_cpg$start <= 10000, ]
-
-# Ensure that the end position is also set correctly for the GRanges object
-filtered_cpg_limited$end <- pmin(filtered_cpg_limited$start + 1, 10000)  # Set end to start + 1 or 10000
-
-# Convert filtered_cpg_limited to GRanges object
-filtered_cpg_gr_limited <- toGRanges(filtered_cpg_limited)
-
-# Open a PNG device to save the plot
-png("../output/methylation/ten_scaffolds_methylation_10000bp.png", width = 45, height = 20, units = "cm", res = 300)
-
-# Create the karyotype plot
-kp <- plotKaryotype(genome = custom, cytobands = features, ideogram.plotter = NULL, plot.type = 2)
-
-# Add background data (if needed)
-kpDataBackground(kp, data.panel = 1)
-
-# Add cytobands with custom colors
-kpAddCytobands(kp, color.table = color_table)
-
-# Plot mod_prob as points in the first panel for limited range
-kpPoints(kp, chr=filtered_cpg_limited$contig, x=filtered_cpg_limited$start, y=filtered_cpg_limited$mod_prob, col=filtered_cpg_limited$col, pch=16)
-
-# Plot regions with colors based on mod_prob in the second panel for limited range
-kpPlotRegions(kp, data=filtered_cpg_gr_limited, col=filtered_cpg_limited$col, data.panel=2)
-
-# Close the graphics device
-dev.off()
-
-```
-
-
-
-
-Trying to plot first 10000bp from the 10 longest chromosomes
-Read in my own data 
-```{r}
-chroms <- read.delim("../output/assembly/ntlink/chrom_lengths.txt", sep = "", header = F)
-colnames(chroms) <- c("chr", "end")
-
-# Remove > from chr name
-chroms$chr <- gsub(">", "", chroms$chr)
-```
-
-Add the starting position (1) to all rows
-```{r}
-chroms$start <- 1
-```
-
-Rearrange columns and organize rows
-```{r}
-chroms <- chroms %>%
-  dplyr::select(chr, start, end) %>%
-  dplyr::arrange(desc(end)) %>%
-  dplyr::slice(1:10)
-
-chroms$end <- 100000
-
-top_10_chroms <- chroms$chr
-```
-
+Filter feature data for chromosomes of interest and bp limits 
 ```{r}
 # Filter data for top 10 chromosomes and first 20,000 bp
 filtered_features <- features[features$chr %in% top_10_chroms & 
                               features$start <= 100000, ]
 ```
 
+## Read in methylation data 
+
+Currently commented out because it takes a while to load
+```{r}
+# cpg <- read.table("~/Desktop/PutnamLab/Apulchra_genome/Apul.pbmm2.combined.bed", header = F, sep="\t",stringsAsFactors=FALSE, quote="")
+# colnames(cpg) <- c("contig", "start", "end", "mod_prob", "haplotype", "coverage", "est_mod_count", "est_unmod_count", "est_count_ratio")
+# dim(cpg)
+```
+
+Filter cpg data to only include the chromosomes of interest and bp limits. 
+```{r}
+filtered_cpg <- cpg[cpg$contig %in% top_10_chroms & 
+                              cpg$start <= 100000, ]
+
+filtered_cpg <- cpg %>%
+  filter(contig %in% unique(chroms$chr)) %>%
+  filter(coverage >5)
+```
+
+Remove any instances when the read coverage is less than 5. The `mod_prob` is the modification probability score or the likelihood that the cytosine in the CpG site is methylated. Higher score = higher likelihood of methylation at that site. It is currently scored as 0 to 100. Change to be a true probability between 0 and 1 for plotting purposes.
+```{r}
+filtered_cpg <- filtered_cpg %>%
+  filter(coverage >5) %>%
+  mutate(mod_prob_prob = mod_prob/100)
+
+# Set colors 
+filtered_cpg$col <- colorRamp2(c(0, max(filtered_cpg$mod_prob_prob)), c("blue", "red"))(filtered_cpg$mod_prob_prob)
+```
+
+## Prep data for plotting 
+
+Making GRanges objects for easier plotting. The function below takes a df object and automatically finds columns that describes genomic regions, then returns them as a GRanges object. 
 ```{r}
 # Create GRanges objects
-cpg_gr <- makeGRangesFromDataFrame(chroms, 
+chroms_gr <- makeGRangesFromDataFrame(chroms, 
                                    keep.extra.columns = TRUE,
                                    seqnames.field = "chr",
                                    start.field = "start",
@@ -240,32 +136,13 @@ features_gr <- makeGRangesFromDataFrame(filtered_features,
                                         keep.extra.columns = TRUE)
 ```
 
-```{r}
-# Filter data for top 10 chromosomes and first 20,000 bp
-cpg_blah <- cpg[cpg$contig %in% top_10_chroms & 
-                              cpg$start <= 100000, ]
-
-# Filter cpg to only include contigs present in chroms
-filtered_cpg <- cpg_blah %>%
-  filter(contig %in% unique(chroms$chr)) %>%
-  filter(coverage >5)
-
-# Make mod_prob into true prob between 0 and 1
-filtered_cpg <- filtered_cpg %>%
-  mutate(mod_prob_prob = mod_prob/100)
-
-filtered_cpg$col <- colorRamp2(c(0, max(filtered_cpg$mod_prob_prob)), c("blue", "red"))(filtered_cpg$mod_prob_prob)
-
-filt_gr <- toGRanges(filtered_cpg)
-```
-
-
+## Plot! 
 ```{r}
 # Open a PNG device to save the plot
 png("../output/methylation/top_ten_scaffolds_methylation_100000bp.png", width = 50, height = 30, units = "cm", res = 300)
 
 # Plot
-kp <- plotKaryotype(genome = cpg_gr, cytobands = features_gr, ideogram.plotter = NULL, plot.type = 2, margins = c(60, 40))
+kp <- plotKaryotype(genome = chroms_gr, cytobands = filtered_features, ideogram.plotter = NULL, plot.type = 1, margins = c(60, 40))
 
 # Add background data (if needed)
 #kpDataBackground(kp, data.panel = 1)
@@ -280,14 +157,11 @@ kpPoints(kp, chr = filtered_cpg$contig, x = filtered_cpg$start, y = filtered_cpg
 #kpPlotMarkers(kp, data = cpg_gr, labels = NULL, line.color = "black", marker.parts = c(0.5, 0.5), r1 = 0.5)
 
 # Add axis
-kpAxis(kp, ymin = 0, ymax = 1, tick.pos = c(0, .5, 1), side = 2)
-#kpAxis(kp, side = 1, tick.pos = c(0, 5000), labels = c("0", "5,000"))
+kpAxis(kp, ymin = 0, ymax = 1, tick.pos = c(0, .5, 1), side = 1)
 
 dev.off()
 ```
 
 I dont think there is a way to add an x-axis (see [axis](https://bernatgel.github.io/karyoploter_tutorial//Tutorial/Axis/Axis.html) in package tutorial) or a legend...
 
-
-
-
+There are a lot of cool applications for this package and genome plotting, see tutorial [here](https://bernatgel.github.io/karyoploter_tutorial/). 
