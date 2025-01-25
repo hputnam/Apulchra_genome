@@ -22,6 +22,7 @@ prediction of a total of 40,518 protein-coding genes, and 16.74% of the genome i
 and DNA methylome will provide the capacity for further mechanistic studies of a common coastal coral in French Polynesia of
 great relevance for restoration and improve our capacity for comparative genomics in _Acropora_ and cnidarians more broadly.
 
+
 We would like to thank the UC Berkeley Gump South Pacific Research Station Station for logistical support and facility space. We thank
 Ariana Huffmyer, Pierrick Harnay, and Danielle Becker for field assistance, as well as Zoe Dellaert and Danielle Becker for laboratory
 assistance. We would also like to acknowledge the resources provided by the John G. Shedd Aquarium. We also thank the University of Rhode
@@ -35,4 +36,10 @@ land and water resources of Polynesia, in particular Mo’orea, and to the tradi
 With respect to the spelling of Tahitian words, we endeavored to followed the Te Fare Vāna’a transcription system that is adhered to by a
 large segment of the Tahitian community, but also recognize other community members follow the Raapoto transcription system where
 the island name of Moorea is, for example, spelled without the ’eta (i.e., Moorea)
+
+Large File Repository
+https://osf.io/y8963/
+
+_A. pulchra_ genome assembly (version 1.1) is available on NCBI under BioProject PRJNA1162071 and BioSample SAMN43800006 
+
 
