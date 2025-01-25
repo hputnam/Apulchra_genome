@@ -31,8 +31,8 @@ This work represents a contribution of the Mo’orea Coral Reef LTER Site and wa
 2224354 to the Mo’orea Coral Reef LTER, as well as a generous gift from the Gordon and Betty Moore Foundation. Research was completed
 under permits issued by the French Polynesian Government (Délégation à la Recherche) and the Haut-commissariat de la République en
 Polynésie Francaise (DTRT) (Protocole d’Accueil 2005-2023) and CITES FR2398700017-E. As guests, we recognize and give thanks for the
-land and water resources of Polynesia, in particular Mo’orea, and to the traditional owners of the land, both past and present. M ¯auruuru roa.
-With respect to the spelling of Tahitian words, we endeavored to followed the Te Fare V ¯ana’a transcription system that is adhered to by a
+land and water resources of Polynesia, in particular Mo’orea, and to the traditional owners of the land, both past and present. Māuruuru roa.
+With respect to the spelling of Tahitian words, we endeavored to followed the Te Fare Vāna’a transcription system that is adhered to by a
 large segment of the Tahitian community, but also recognize other community members follow the Raapoto transcription system where
 the island name of Moorea is, for example, spelled without the ’eta (i.e., Moorea)
 
