@@ -20,4 +20,19 @@ The assembly size is 518 Mbp, with 174 scaffolds, and a scaffold N50 of 17 Mbp. 
 prediction of a total of 40,518 protein-coding genes, and 16.74% of the genome in repeats. DNA methylation in the CpG context was
 14.6% and predominantly found in flanking and gene body regions (61.7%). This first reference assembly of the _A. pulchra_ genome
 and DNA methylome will provide the capacity for further mechanistic studies of a common coastal coral in French Polynesia of
-great relevance for restoration and improve our capacity for comparative genomics in Acropora and cnidarians more broadly.
+great relevance for restoration and improve our capacity for comparative genomics in _Acropora_ and cnidarians more broadly.
+
+We would like to thank the UC Berkeley Gump South Pacific Research Station Station for logistical support and facility space. We thank
+Ariana Huffmyer, Pierrick Harnay, and Danielle Becker for field assistance, as well as Zoe Dellaert and Danielle Becker for laboratory
+assistance. We would also like to acknowledge the resources provided by the John G. Shedd Aquarium. We also thank the University of Rhode
+Island High Performance Computing for their logistical support. Research was completed under permits issued by the French Polynesian
+Government (Délégation à la Recherche) and the Haut-commissariat de la République en Polynésie Francaise (DTRT) (Protocole d’Accueil 2005-2023).
+This work represents a contribution of the Mo’orea Coral Reef LTER Site and was supported by resources from NSF-OCE
+2224354 to the Mo’orea Coral Reef LTER, as well as a generous gift from the Gordon and Betty Moore Foundation. Research was completed
+under permits issued by the French Polynesian Government (Délégation à la Recherche) and the Haut-commissariat de la République en
+Polynésie Francaise (DTRT) (Protocole d’Accueil 2005-2023) and CITES FR2398700017-E. As guests, we recognize and give thanks for the
+land and water resources of Polynesia, in particular Mo’orea, and to the traditional owners of the land, both past and present. M ¯auruuru roa.
+With respect to the spelling of Tahitian words, we endeavored to followed the Te Fare V ¯ana’a transcription system that is adhered to by a
+large segment of the Tahitian community, but also recognize other community members follow the Raapoto transcription system where
+the island name of Moorea is, for example, spelled without the ’eta (i.e., Moorea)
+
