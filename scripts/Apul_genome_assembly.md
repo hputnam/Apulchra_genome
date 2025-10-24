@@ -1,4 +1,4 @@
-## Acropora pulchra genome assembly 
+# Acropora pulchra genome assembly 
 
 Written on 10/24/25 by J. Ashey. See assembly notes and troubleshooting post [here](https://github.com/JillAshey/JillAshey_Putnam_Lab_Notebook/blob/master/_posts/2024-02-06-Apulchra-Genome-Assembly.md). 
 
@@ -6,17 +6,22 @@ This markdown provides a workflow for genome assembly from PacBio Hifi reads. Mo
 
 I used genome assembly methods from [Young et al. 2024](https://link.springer.com/article/10.1186/s12864-024-10092-w?utm_source=rct_congratemailt&utm_medium=email&utm_campaign=oa_20240229&utm_content=10.1186/s12864-024-10092-w#Sec12334225451) (see github [here](https://github.com/benyoung93/orbicella_faveolata_pacbio_genome_transcriptome/blob/main)). This analysis was done on URI's old HPC, Andromeda. 
 
-### Samples
+## Table of Contents
+
+XXXXXX add 
+
+
+## Samples
 
 Sperm and tissue from adult Acropora pulchra colonies were collected from Moorea, French Polynesia in 2022 and preserved in DNA/RNA shield. 
 
-### PacBio HiFi sequencing 
+## PacBio HiFi sequencing 
 
 The PacBio sequencing for the Apul genome were done with HiFi sequencing that are produced with circular consensus sequencing on PacoBio long read systems. Here's how HiFi reads are generated from the [PacBio website](https://www.pacb.com/technology/hifi-sequencing/):
 
 ![](https://raw.githubusercontent.com/JillAshey/JillAshey_Putnam_Lab_Notebook/master/images/hifi_read_generation.png)
 
-### Genome assembly  
+## Genome assembly  
 
 The PacBio files that will be used for assembly are located here on Andromeda: `/data/putnamlab/KITT/hputnam/20240129_Apulchra_Genome_LongRead`. The files in the folder that we will use are:
 
@@ -27,7 +32,7 @@ m84100_240128_024355_s2.hifi_reads.bc1029.bam.pbi
 
 The bam file contains all of the read information in computer language and the pbi file is an index file of the bam. 
 
-#### bam2fastq
+### bam2fastq
 
 Convert the bam file to fastq file for analysis using `bam2fastq`. This is a part of the PacBio BAM toolkit package `pbtk`.
 
@@ -80,7 +85,7 @@ zgrep -c "@m84100" m84100_240128_024355_s2.hifi_reads.bc1029.fastq.fastq.gz
 
 5.8 million HiFi reads were generated. 
 
-#### seqtk
+### seqtk
 
 Convert the fastq to a fasta file with [seqtk](https://github.com/lh3/seqtk). `nano seqtk.sh`
 
@@ -139,7 +144,7 @@ rr_length_histo <- ggplot(data = hifi_read_length,
 
 ![](https://raw.githubusercontent.com/hputnam/Apulchra_genome/main/output/rr_length_histogram.png)
 
-#### Contaminant removal 
+### Contaminant removal 
 
 Screen raw reads for potential contaminants and remove any reads that have identified contaminants. For the Apul genome, I screened for common eukaryote contaminant sequences (`ftp.ncbi.nlm.nih. gov/pub/kitts/contam_in_euks.fa.gz`), viral (`ref_viruses_rep_genomes`) and prokaryote (`ref_prok_rep_genomes`) representative genome sets, Apul symbiont genomes, and the Apul mitochondrial genome using BLAST. 
 
@@ -512,7 +517,7 @@ seqtk subseq m84100_240128_024355_s2.hifi_reads.bc1029.fasta output_file.txt > h
 echo "Subsetting complete!" $(date)
 ```
 
-#### Hifiasm
+### Hifiasm
 
 [Hifiasm](https://hifiasm.readthedocs.io/en/latest/index.html), a fast haplotype-resolved de novo assembler designed for PacBio HiFi reads, was the assembly tool used for this genome. According to [Hifiasm github](https://github.com/chhylp123/hifiasm), here are some good reasons to use Hifiasm:
 
@@ -565,7 +570,7 @@ conda deactivate
 
 This took about 3 days to run. The primary assembly file is `apul.hifiasm.s55_pa.p_ctg.gfa` and the alternate assembly file is `apul.hifiasm.s55_pa.a_ctg.gfa`. This [page](https://hifiasm.readthedocs.io/en/latest/interpreting-output.html#interpreting-output) provides a helpful overview of the Hifiasm output files. 
 
-#### Busco & Quast on Hifiasm assembly 
+### Busco & Quast on Hifiasm assembly 
 
 [Busco](https://busco.ezlab.org/) and [Quast ](https://github.com/ablab/quast) were used for assembly QC. Busco (Benchmarking Universal Single-Copy Orthologs) assesses the biologically completeness of an assembly by checking if highly conserved single copy orthologs are present. Quast provides assembly metrics, such as N50. 
 
@@ -714,7 +719,7 @@ echo "Quast complete; all QC complete!" $(date)
 
 See output files [here](https://github.com/hputnam/Apulchra_genome/tree/main/output/assembly/primary). Our assembly has 187 contigs, which is quite low compared to other coral species (except Ofav, which has 51). 
 
-#### ntlinks
+### ntlinks
 
 After QC of the assembly, use [ntlinks](https://github.com/bcgsc/ntLink) to scaffold the assembly. It will not change the contigs themselves but can combine them into scaffolds using sequence overlaps or k-mer information. This can increase N50 and reduce assembly fragmentation. he ntlink software has options to run multiple iterations/rounds of ntlink to achieve the highest possible contiguity without sacrificing assembly correctness. From the Basic Protocol 3 from the [ntlinks paper](https://currentprotocols.onlinelibrary.wiley.com/doi/10.1002/cpz1.733): "Using the in-code round capability of ntLink allows a user to maximize the contiguity of the final assembly without needing to manually run ntLink multiple times. To avoid re-mapping the reads at each round, ntLink lifts over the mapping coordinates from the input draft assembly to the output post-ntLink scaffolds, which can then be used for the next round of ntLink. The same process can be repeated as many times as needed, thus enabling multiple rounds of ntLink to be powered by a single instance of long-read mapping." 
 
@@ -766,7 +771,7 @@ echo "Scaffolding of hifiasm primary assembly with ntlinks (rounds = 5) complete
 
 The code above is scaffolding contigs iteratively over 5 rounds, improving contig ordering and orientation. The `gap_fill` attempts to fill gaps between contigs using the reads, while the gap size `-g` controls the minimum gap size allowed between joined contigs. 
 
-#### Busco & Quast on Hifiasm + ntlinks assembly 
+### Busco & Quast on Hifiasm + ntlinks assembly 
 
 Use Busco and Quast to QC the updated assembly. `nano busco_ntlink_qc.sh`
 
