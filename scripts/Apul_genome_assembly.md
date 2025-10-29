@@ -8,8 +8,16 @@ I used genome assembly methods from [Young et al. 2024](https://link.springer.co
 
 ## Table of Contents
 
-XXXXXX add 
-
+* [Samples](https://github.com/hputnam/Apulchra_genome/blob/main/scripts/Apul_genome_assembly.md#samples)
+* [PacBio HiFi sequencing](https://github.com/hputnam/Apulchra_genome/blob/main/scripts/Apul_genome_assembly.md#pacbio-hifi-sequencing)
+* [Genome assembly](https://github.com/hputnam/Apulchra_genome/blob/main/scripts/Apul_genome_assembly.md#genome-assembly)
+	* [bam2fastq](https://github.com/hputnam/Apulchra_genome/blob/main/scripts/Apul_genome_assembly.md#bam2fastq)
+	* [seqtk](https://github.com/hputnam/Apulchra_genome/blob/main/scripts/Apul_genome_assembly.md#seqtk)
+	* [Contaminant removal](https://github.com/hputnam/Apulchra_genome/blob/main/scripts/Apul_genome_assembly.md#contaminant-removal)
+	* [Hifiasm](https://github.com/hputnam/Apulchra_genome/blob/main/scripts/Apul_genome_assembly.md#hifiasm)
+	* [Busco & Quast on Hifiasm assembly](https://github.com/hputnam/Apulchra_genome/blob/main/scripts/Apul_genome_assembly.md#busco--quast-on-hifiasm-assembly)
+	* [ntlinks](https://github.com/hputnam/Apulchra_genome/blob/main/scripts/Apul_genome_assembly.md#ntlinks)
+	* [Busco & Quast on Hifiasm + ntlinks assembly](https://github.com/hputnam/Apulchra_genome/blob/main/scripts/Apul_genome_assembly.md#busco--quast-on-hifiasm--ntlinks-assembly)
 
 ## Samples
 
